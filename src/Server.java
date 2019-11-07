@@ -17,7 +17,6 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
 
 public class Server {
 
@@ -113,21 +112,39 @@ public class Server {
         this.ShowMsg.append(msg);
     }
 
+    public Server() {
+        SendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String outmsg="";
+                outmsg = InputField.getText();
+                System.out.println(outmsg);
+                ShowMsg.append("\nYou: " + outmsg);
+                outmsg = outmsg + "&&" + getHash(outmsg);
+                try {
+                    oos.writeObject(encrypt(outmsg, secKey));
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+        });
+    }
+
     public static void main(String[] args) throws IOException, ClassNotFoundException {
 
         Server obj =  new Server();
         JFrame frame = new JFrame("Server");
         frame.setContentPane(obj.MainPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
+        frame.setSize(500, 400);
+        //frame.pack();
         frame.setVisible(true);
 
         SecureRandom secRan = new SecureRandom();
         double Bdash = 0;
         Scanner sc = new Scanner(System.in);
         server = new ServerSocket(port);
-        String send = "";
-        String outmsg="";
         System.out.println("Waiting for client");
         Socket socket = server.accept();
         System.out.println("Just connected to " + socket.getRemoteSocketAddress());
@@ -164,48 +181,24 @@ public class Server {
         } catch (IOException e) {
         }
 
-        final String secretKey = Double.toString(Bdash);
+        secKey = Double.toString(Bdash);
 
         String recvd = "";
         while (!recvd.equals("Exit")) {
 
-            recvd  = (String) ois.readObject();
-            System.out.println(recvd);
-            Client obj1 = new Client();
-            obj.SetValue("\nServer: " + recvd);
-            //String[] message= recvd.split("&&");
-            //if(!getHash(message[0]).equals(message[1])) System.out.println("Authentication failed!!!");
-            System.out.println("\nClient: " + recvd);
-            //obj1.SetValue("\nClient: " + message[0]);*/
-            /*System.out.print("\nYou: ");
-            outmsg = obj1.GetValue();
-            send = outmsg+"&&"+getHash(outmsg);
-            oos.writeObject(Server.encrypt(send, secretKey));
-            if (outmsg.equalsIgnoreCase("exit")) break;*/
+            String asdf = (String) ois.readObject();
+            recvd = decrypt(asdf, secKey);
+            String[] message = recvd.split("&&");
+            if (!getHash(message[0]).equals(message[1])) System.out.println("Authentication failed!!!");
+            obj.SetValue("\nClient: " + message[0]);
+            System.out.println("\nClient: " + message[0]);
+            System.out.println(asdf);
         }
         ois.close();
         oos.close();
         socket.close();
         System.out.println("Server closed");
         server.close();
-    }
-
-    public Server() {
-        SendButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String outmsg="";
-                outmsg = InputField.getText();
-                System.out.println(outmsg);
-                ShowMsg.append("\nYou: " + outmsg);
-                try {
-                    oos.writeObject(outmsg);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-
-        });
     }
 
 }

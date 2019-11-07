@@ -16,7 +16,6 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
 
 public class Client {
 
@@ -113,13 +112,34 @@ public class Client {
         this.ShowMsg.append(msg);
     }
 
+    public Client() {
+        SendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                    String outmsg = InputField.getText();
+                    System.out.println(outmsg);
+                    ShowMsg.append("\nYou: " + outmsg);
+                outmsg = outmsg + "&&" + getHash(outmsg);
+
+                try {
+                    oos.writeObject(encrypt(outmsg, secKey));
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+            }
+        });
+    }
+
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 
         Client obj=new Client();
         JFrame frame = new JFrame("Client");
         frame.setContentPane(obj.MainPanel);
+        frame.setSize(500, 400);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
+        //frame.pack();
         frame.setVisible(true);
 
         SecureRandom secRan = new SecureRandom();
@@ -160,25 +180,17 @@ public class Client {
 
             System.out.println("Secret Key to perform Symmetric Encryption = " + Adash);
 
-            final String secKey = Double.toString(Adash);
-            String send = "";
-            String outmsg="";
+            secKey = Double.toString(Adash);
             String recvd = "";
             while (!recvd.equals("Exit")) {
 
-                recvd  = (String) ois.readObject();
-                Client obj1 = new Client();
-                obj.SetValue("\nServer: " + recvd);
-
-                /*System.out.print("\nYou: ");
-                outmsg = "obj1.GetValue();";
-                send = outmsg+"&&"+getHash(outmsg);
-                oos.writeObject(Server.encrypt(send, secKey));
-                if (outmsg.equalsIgnoreCase("exit")) break;*/
-                //String[] message= recvd.split("&&");
-                //if(!getHash(message[0]).equals(message[1])) System.out.println("Authentication failed!!!");
-                System.out.println("\nServer: " + recvd);
-                //obj1.SetValue("\nServer: " + message[0]);*/
+                String asdf = (String) ois.readObject();
+                recvd = decrypt(asdf, secKey);
+                String[] message = recvd.split("&&");
+                if (!getHash(message[0]).equals(message[1])) System.out.println("Authentication failed!!!");
+                obj.SetValue("\nServer: " + message[0]);
+                System.out.println("\nServer: " + message[0]);
+                System.out.println(asdf);
             }
             ois.close();
             oos.close();
@@ -188,25 +200,5 @@ public class Client {
             e.printStackTrace();
         }
 
-    }
-
-
-
-    public Client() {
-        SendButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-                    String outmsg = InputField.getText();
-                    System.out.println(outmsg);
-                    ShowMsg.append("\nYou: " + outmsg);
-                try {
-                    oos.writeObject(outmsg);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-
-            }
-        });
     }
 }
