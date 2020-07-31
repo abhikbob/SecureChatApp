@@ -118,6 +118,7 @@ public class Server {
             public void actionPerformed(ActionEvent e) {
                 String outmsg="";
                 outmsg = InputField.getText();
+                InputField.setText("");
                 System.out.println(outmsg);
                 ShowMsg.append("\nYou: " + outmsg);
                 outmsg = outmsg + "&&" + getHash(outmsg);
